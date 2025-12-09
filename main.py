@@ -1,44 +1,63 @@
 import random
 
-#setting leaderboard
-leaderboard = []
-try:
-    with open("highscore.txt", "r") as f:
-        for line in f:
-            name, score = line.strip().split(",")
-            leaderboard.append((name, int(score)))
-except:
+def load_leaderboard(filename="highscore.txt"):
     leaderboard = []
+    try:
+        with open(filename, "r") as f:
+            for line in f:
+                name, score = line.strip().split(",")
+                leaderboard.append((name, int(score)))
+    except FileNotFoundError:
+        pass
+    return leaderboard
 
-# initialisation of variables
+def save_leaderboard(leaderboard, filename="highscore.txt"):
+    with open(filename, "w") as f:
+        for name, score in leaderboard:
+            f.write(f"{name},{score}\n")
 
-username = input("Enter your name: ")
-n = random.randint(1, 100)
-a = -1
-guesses = 0
+def display_leaderboard(leaderboard):
+    print("\n🏆 Leaderboard:")
+    for i, (name, score) in enumerate(leaderboard, start=1):
+        print(f"{i}. {name} - {score} attempts")
 
-#game loop
+def play_game():
+    username = input("Enter your name: ")
+    secret_number = random.randint(1, 100)
+    attempts = 0
+    guess = None
 
-while n != a:
-    guesses += 1
-    a = int(input("Guess The Number! "))
+    while guess != secret_number:
+        attempts += 1
+        try:
+            guess = int(input("Guess The Number! "))
+        except ValueError:
+            print("⚠ Please enter a valid number!")
+            continue
 
-    if a > n:
-        print("Enter a smaller number")
-    elif a < n:
-        print("Enter a bigger number")
+        if guess > secret_number:
+            print("Enter a smaller number")
+        elif guess < secret_number:
+            print("Enter a bigger number")
 
-# update leaderboard
-leaderboard.append((username, guesses))
-leaderboard = sorted(leaderboard, key=lambda x: x[1])[:5]  # keep top 5 players
+    print(f"\nCongrats {username}, You Won the Game! 🎉")
+    print(f"You guessed {secret_number} in {attempts} attempts")
 
-with open("highscore.txt", "w") as f:
-    for name, score in leaderboard:
-        f.write(f"{name},{score}\n")
+    return username, attempts
 
-print("\n🏆 Leaderboard:")
-for i, (name, score) in enumerate(leaderboard, start=1):
-    print(f"{i}. {name} - {score} attempts")
+def update_leaderboard(leaderboard, username, attempts):
+    leaderboard.append((username, attempts))
+    leaderboard = sorted(leaderboard, key=lambda x: x[1])[:5]
+    save_leaderboard(leaderboard)
+    return leaderboard
 
-print(f"\nCongrats {username}, You Won the Game! 🎉")
-print(f"You guessed {n} in {guesses} attempts")
+
+def main():
+    leaderboard = load_leaderboard()
+    username, attempts = play_game()
+    leaderboard = update_leaderboard(leaderboard, username, attempts)
+    display_leaderboard(leaderboard)
+
+
+if __name__ == "__main__":
+    main()
